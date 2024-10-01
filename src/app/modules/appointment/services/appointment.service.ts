@@ -21,7 +21,7 @@ export class AppointmentService implements AppointmentServiceInterface {
     crp: string, 
     date?: string,
     pacientId?: number
-): Promise<GetAppointmentResDto> {
+  ): Promise<GetAppointmentResDto> {
     this.validateAuth(crp);
     const filter: any = { crp: crp };
 
@@ -33,6 +33,29 @@ export class AppointmentService implements AppointmentServiceInterface {
     if (pacientId) {
         filter.pacientId = pacientId;
     }
+ 
+    const appointments = await this.appointmentModel.find(filter).exec();
+ 
+    if (!appointments || appointments.length === 0) {
+        return { appointment: [] };
+    }
+ 
+    return { 
+       appointment: appointments.map(appointment => appointment) 
+    };
+  }
+
+  async getMyAppointments(
+    pacientId: number, 
+    date?: string,
+  ): Promise<GetAppointmentResDto> {
+    this.validateAuth(pacientId);
+    const filter: any = { pacientId: pacientId };
+
+    if (date) {
+        const ISOdate = convertToISODate(date);
+        filter.date = ISOdate;
+     }
  
     const appointments = await this.appointmentModel.find(filter).exec();
  
@@ -69,7 +92,7 @@ export class AppointmentService implements AppointmentServiceInterface {
     };
   }
 
-  async putRDP(crp: string, body: PutAppointmentReqDto): Promise<GetAppointmentResDto> {
+  async putAppointment(crp: string, body: PutAppointmentReqDto): Promise<GetAppointmentResDto> {
     this.validateAuth(crp);
 
     const appointmentOld = await this.appointmentModel.findOne({ uuid: body.uuid }).exec();
@@ -125,7 +148,7 @@ export class AppointmentService implements AppointmentServiceInterface {
     }
   }
 
-  private validateAuth(user: string) {
+  private validateAuth(user: any) {
     if (!user) {
       throw new HttpException('Invalid session', HttpStatus.UNAUTHORIZED);
     }

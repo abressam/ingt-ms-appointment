@@ -3,17 +3,16 @@ import { GetAppointmentResDto } from '@app/modules/appointment/dtos/responses/ge
 import { PostAppointmentReqDto } from '@app/modules/appointment/dtos/requests/post-appointment-req.dto';
 import { PutAppointmentReqDto } from '@app/modules/appointment/dtos/requests/put-appointment-req.dto';
 
-export interface AppointmentServiceInterface {
+export interface AppointmentControllerInterface {
     getAppointment(
-        crp: string, 
+        req: Request,
         date?: string,
-        pacientId?: number
+        pacientId?: number,
     ): Promise<GetAppointmentResDto>;
     getMyAppointments(
-        pacientId: number, 
-        date?: string,
+        req: Request,
     ): Promise<GetAppointmentResDto>;
-    postAppointment(crp: string, body: PostAppointmentReqDto): Promise<GetAppointmentResDto>;
-    putAppointment(crp: string, body: PutAppointmentReqDto): Promise<GetAppointmentResDto>;
-    deleteAppointment(crp: string, uuid: string): Promise<DeleteAppointmentResDto>
+    postAppointment(req: Request, body: PostAppointmentReqDto): Promise<GetAppointmentResDto>;
+    putAppointment(req: Request, body: PutAppointmentReqDto): Promise<GetAppointmentResDto>;
+    deleteAppointment(req: Request, uuid: string ): Promise<DeleteAppointmentResDto>;
 }

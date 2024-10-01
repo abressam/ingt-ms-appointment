@@ -1,7 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { SessionMiddleware } from '@app/modules/session/middlewares/session.middleware';
-import { SessionModule } from '@app/modules/session/session.module';
-import { UserModule } from '@app/modules/user/user.module';
+import { AppointmentModule } from '@app/modules/appointment/appointment.module';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import appConfig from '@app/configs/app.config';
@@ -9,8 +8,7 @@ import dbConfig from '@app/configs/db.config';
 
 @Module({
   imports: [
-    SessionModule,
-    UserModule,
+    AppointmentModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig],
@@ -22,10 +20,11 @@ import dbConfig from '@app/configs/db.config';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(SessionMiddleware).forRoutes(
-      { path: 'user/get', method: RequestMethod.GET },
-      { path: 'user/get/patients', method: RequestMethod.GET },
-      { path: 'user/delete', method: RequestMethod.DELETE },
-      { path: 'user/put', method: RequestMethod.PUT },
+      { path: 'appointment/get', method: RequestMethod.GET },
+      { path: 'appointment/get/my-appointments', method: RequestMethod.GET },
+      { path: 'appointment/post', method: RequestMethod.POST },
+      { path: 'appointment/delete', method: RequestMethod.DELETE },
+      { path: 'appointment/put', method: RequestMethod.PUT },
     );
   }
 }
