@@ -20,10 +20,10 @@ import dbConfig from '@app/configs/db.config';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(SessionMiddleware).forRoutes(
-      { path: 'appointment/get', method: RequestMethod.GET },
+      { path: 'appointment/get/professional-appointments', method: RequestMethod.GET },
       { path: 'appointment/get/my-appointments', method: RequestMethod.GET },
       { path: 'appointment/post', method: RequestMethod.POST },
-      { path: 'appointment/delete', method: RequestMethod.DELETE },
+      { path: 'appointment/delete/:uuid', method: RequestMethod.DELETE },
       { path: 'appointment/put', method: RequestMethod.PUT },
     );
   }

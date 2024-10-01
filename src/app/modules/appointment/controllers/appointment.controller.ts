@@ -31,7 +31,7 @@ import {
 export class AppointmentController implements AppointmentControllerInterface {
   constructor(private readonly appointmentService: AppointmentService) {}
 
-  @Get('get')
+  @Get('get/professional-appointments')
   @HttpCode(200)
   @ApiBearerAuth('auth')
   @ApiOperation({ summary: 'Get the appointment data' })
@@ -65,6 +65,7 @@ export class AppointmentController implements AppointmentControllerInterface {
   
   @Get('get/my-appointments')
   @HttpCode(200)
+  @ApiBearerAuth('auth')
   @ApiOperation({ summary: 'Get all the client data appointments' })
   @ApiResponse({
     status: 200,
@@ -91,6 +92,7 @@ export class AppointmentController implements AppointmentControllerInterface {
 
   @Post('post')
   @HttpCode(200)
+  @ApiBearerAuth('auth')
   @ApiOperation({ summary: 'Post the appointment data' })
   @ApiResponse({
     status: 200,
@@ -142,7 +144,7 @@ export class AppointmentController implements AppointmentControllerInterface {
     }
   }
 
-  @Delete('delete')
+  @Delete('delete/:uuid')
   @HttpCode(200)
   @ApiBearerAuth('auth')
   @ApiOperation({ summary: 'Delete the appointment data' })
@@ -156,7 +158,7 @@ export class AppointmentController implements AppointmentControllerInterface {
     description: 'Internal server error',
     type: ErrorDto,
   })
-  async deleteAppointment(@Request() req: Request, @Param() uuid: string) {
+  async deleteAppointment(@Request() req: Request, @Param('uuid') uuid: string) {
     const logger = new Logger(AppointmentController.name);
 
     try {
