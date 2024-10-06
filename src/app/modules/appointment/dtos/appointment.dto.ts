@@ -9,7 +9,7 @@ export class AppointmentDto {
 
     @ApiProperty()
     @IsNotEmpty()
-    pacientId?: number | null;
+    patientId: string;
   
     @ApiProperty()
     @IsDateString()

@@ -7,13 +7,15 @@ export interface AppointmentServiceInterface {
     getAppointment(
         crp: string, 
         date?: string,
-        pacientId?: number
+        patientId?: string
     ): Promise<GetAppointmentResDto>;
     getMyAppointments(
-        pacientId: number, 
+        patientId: string, 
         date?: string,
     ): Promise<GetAppointmentResDto>;
     postAppointment(crp: string, body: PostAppointmentReqDto): Promise<GetAppointmentResDto>;
     putAppointment(crp: string, body: PutAppointmentReqDto): Promise<GetAppointmentResDto>;
-    deleteAppointment(crp: string, uuid: string): Promise<DeleteAppointmentResDto>
+    patchLinkAppointment(patientId: string, uuid: string): Promise<GetAppointmentResDto>;
+    patchCancelAppointment(uuid: string, patientId: string): Promise<GetAppointmentResDto>;
+    deleteAppointment(crp: string, uuid: string): Promise<DeleteAppointmentResDto>;
 }

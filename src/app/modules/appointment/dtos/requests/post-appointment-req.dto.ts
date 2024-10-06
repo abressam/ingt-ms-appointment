@@ -3,13 +3,9 @@ import { IsString, IsOptional, IsNotEmpty, IsDateString, Matches } from 'class-v
 
 export class PostAppointmentReqDto {
     @ApiProperty()
-    @IsString()
+    @IsOptional()
     @IsNotEmpty()
-    crp: string;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    pacientId?: number | null;
+    patientId?: string | null;
   
     @ApiProperty()
     @IsDateString()

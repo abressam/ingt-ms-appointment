@@ -19,19 +19,37 @@ export class AppointmentService implements AppointmentServiceInterface {
 
   async getAppointment(
     crp: string, 
-    date?: string,
-    pacientId?: number
+    startDate?: string,
+    endDate?: string,
+    patientId?: string
   ): Promise<GetAppointmentResDto> {
     this.validateAuth(crp);
     const filter: any = { crp: crp };
 
-    if (date) {
-        const ISOdate = convertToISODate(date);
-        filter.date = ISOdate;
-     }
+    if (startDate && !endDate) {
+      throw new HttpException('endDate is required when startDate is provided', HttpStatus.BAD_REQUEST);
+    }
+
+    if (!startDate && endDate) {
+      throw new HttpException('startDate is required when endDate is provided', HttpStatus.BAD_REQUEST);
+    }
+
+    if (startDate) {
+      const ISOstartDate = convertToISODate(startDate);
+      filter.date = { $gte: ISOstartDate }; // Adiciona um filtro para >= startDate
+    }
+
+    if (endDate) {
+      const ISOendDate = convertToISODate(endDate);
+      if (filter.date) {
+        filter.date = { ...filter.date, $lte: ISOendDate }; // Adiciona um filtro para <= endDate
+      } else {
+        filter.date = { $lte: ISOendDate }; // Cria um novo filtro para <= endDate
+      }
+    }
  
-    if (pacientId) {
-        filter.pacientId = pacientId;
+    if (patientId) {
+        filter.patientId = patientId;
     }
  
     const appointments = await this.appointmentModel.find(filter).exec();
@@ -46,11 +64,11 @@ export class AppointmentService implements AppointmentServiceInterface {
   }
 
   async getMyAppointments(
-    pacientId: number, 
+    patientId: string, 
     date?: string,
   ): Promise<GetAppointmentResDto> {
-    this.validateAuth(pacientId);
-    const filter: any = { pacientId: pacientId };
+    this.validateAuth(patientId);
+    const filter: any = { patientId: patientId };
 
     if (date) {
         const ISOdate = convertToISODate(date);
@@ -70,10 +88,38 @@ export class AppointmentService implements AppointmentServiceInterface {
 
   async postAppointment(crp: string, body: PostAppointmentReqDto): Promise<GetAppointmentResDto> {
     this.validateAuth(crp);
+
+    if(crp == null) {
+      throw new HttpException('Only professionals can create appointments', HttpStatus.UNAUTHORIZED);
+    }
+
     const uuid = generateUuid();
+
+    const existingAppointment = await this.appointmentModel.findOne({
+      date: body.date,
+      $or: [
+        {
+          startTime: { $lte: body.endTime, $gte: body.startTime }
+        },
+        {
+          endTime: { $gte: body.startTime, $lte: body.endTime }
+        },
+        {
+          $and: [
+            { startTime: { $lte: body.startTime } },
+            { endTime: { $gte: body.endTime } }
+          ]
+        }
+      ]
+    });
+
+    if (existingAppointment) {
+      throw new HttpException('There is already an appointment at this date and time', HttpStatus.BAD_REQUEST);
+    }
 
     const createdAppointment = new this.appointmentModel({
       ...body,
+      crp: crp,
       uuid: uuid,
     });
     
@@ -82,7 +128,7 @@ export class AppointmentService implements AppointmentServiceInterface {
     return {
       appointment: [{
         crp: appointment.crp,
-        pacientId: appointment.pacientId,
+        patientId: appointment.patientId,
         date: appointment.date,
         startTime: appointment.startTime,
         endTime: appointment.endTime,
@@ -117,12 +163,74 @@ export class AppointmentService implements AppointmentServiceInterface {
     return {
       appointment: [{
         crp: appointmentNew.crp,
-        pacientId: appointmentNew.pacientId,
+        patientId: appointmentNew.patientId,
         date: appointmentNew.date,
         startTime: appointmentNew.startTime,
         endTime: appointmentNew.endTime,
         type: appointmentNew.type,
         location: appointmentNew.location
+        }],
+    };
+  }
+
+  async patchLinkAppointment(patientId: string, uuid: string): Promise<GetAppointmentResDto> {
+    this.validateAuth(patientId);
+
+    if(patientId === null) {
+      throw new HttpException('Only pacients can link to appointment', HttpStatus.UNAUTHORIZED);
+    }
+
+    const appointment = await this.appointmentModel.findOne({ uuid: uuid }).exec();
+
+    this.validateAppointment(appointment);
+
+    if (appointment.patientId) {
+      throw new HttpException('This appointment is already linked to a patient', HttpStatus.BAD_REQUEST);
+    }
+
+    appointment.patientId = patientId; // Atualiza o patientId
+    await appointment.save(); // Salva as mudanças
+
+    return {
+      appointment: [{
+        crp: appointment.crp,
+        patientId: appointment.patientId,
+        date: appointment.date,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        type: appointment.type,
+        location: appointment.location
+        }],
+    };
+  }
+
+  async patchCancelAppointment(uuid: string, patientId: string): Promise<GetAppointmentResDto> {
+    this.validateAuth(patientId);
+
+    const appointment = await this.appointmentModel.findOne({ uuid: uuid }).exec();
+
+    this.validateAppointment(appointment);
+
+    if(patientId != appointment.patientId) {
+      throw new HttpException('Only the linked patientId can cancel the appointment', HttpStatus.UNAUTHORIZED);
+    }
+
+    if (!appointment.patientId) {
+      throw new HttpException('This appointment is already cancelled or not linked to a patient', HttpStatus.BAD_REQUEST);
+    }
+
+    appointment.patientId = null; // Atualiza o patientId
+    await appointment.save(); // Salva as mudanças
+
+    return {
+      appointment: [{
+        crp: appointment.crp,
+        patientId: appointment.patientId,
+        date: appointment.date,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        type: appointment.type,
+        location: appointment.location
         }],
     };
   }
@@ -138,13 +246,13 @@ export class AppointmentService implements AppointmentServiceInterface {
 
     return {
       statusCode: 200,
-      message: 'RPD successfully deleted',
+      message: 'Appointment successfully deleted',
     };
   }
 
   private validateAppointment(appointment: AppointmentDto) {
     if (!appointment) {
-      throw new HttpException('No RPD register found', HttpStatus.NOT_FOUND);
+      throw new HttpException('No appointment register found', HttpStatus.NOT_FOUND);
     }
   }
 

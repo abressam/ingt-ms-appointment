@@ -10,7 +10,7 @@ export class Appointment extends Document {
    crp: string;   
    
    @Prop()
-   pacientId: number | null;   
+   patientId: string | null;   
    
    @Prop()
    date: string;   

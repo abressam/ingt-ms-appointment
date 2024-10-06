@@ -3,6 +3,7 @@ import { AppointmentControllerInterface } from '@app/modules/appointment/control
 import { ErrorDto } from '@app/modules/session/dtos/error.dto';
 import { DeleteAppointmentResDto } from '@app/modules/appointment/dtos/responses/delete-appointment-res.dto';
 import { GetAppointmentResDto } from '@app/modules/appointment/dtos/responses/get-appointment-res.dto';
+import { GetAppointmentReqDto } from '@app/modules/appointment/dtos/requests/get-appointment-req.dto';
 import { PostAppointmentReqDto } from '@app/modules/appointment/dtos/requests/post-appointment-req.dto';
 import { PutAppointmentReqDto } from '@app/modules/appointment/dtos/requests/put-appointment-req.dto';
 import {
@@ -17,6 +18,7 @@ import {
   Put,
   Post,
   Delete,
+  Patch,
   Request,
   Query,
   Body,
@@ -47,15 +49,14 @@ export class AppointmentController implements AppointmentControllerInterface {
   })
   async getAppointment(
     @Request() req: Request,
-    @Query('date') date?: string,
-    @Query('pacientId') pacientId?: number,
+    @Query() filter?: GetAppointmentReqDto,
   ) {
     const logger = new Logger(AppointmentController.name);
 
     try {
       const user = req['crp'];
       logger.log('getAppointment()');
-      return await this.appointmentService.getAppointment(user, date, pacientId);
+      return await this.appointmentService.getAppointment(user, filter.startDate, filter.endDate, filter?.patientId);
     } catch (error) {
       logger.error(error);
       throw new HttpException(error.message, error.getStatus());
@@ -81,7 +82,8 @@ export class AppointmentController implements AppointmentControllerInterface {
     const logger = new Logger(AppointmentController.name);
 
     try {
-      const user = req['pacientId'];
+      const user = req['patientId'];
+      console.log("Valor do patientId getMyAppointments: ", user);
       logger.log('getMyAppointments()');
       return await this.appointmentService.getMyAppointments(user);
     } catch (error) {
@@ -138,6 +140,89 @@ export class AppointmentController implements AppointmentControllerInterface {
       const user = req['crp'];
       logger.log('putAppointment()');
       return await this.appointmentService.putAppointment(user, body);
+    } catch (error) {
+      logger.error(error);
+      throw new HttpException(error.message, error.getStatus());
+    }
+  }
+
+  @Patch('patch/link-appointment/:uuid')
+  @HttpCode(200)
+  @ApiBearerAuth('auth')
+  @ApiOperation({ summary: 'Get all the client data appointments' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a JSON with the data from all client data appointments',
+    type: GetAppointmentResDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: ErrorDto,
+  })
+  async patchLinkAppointment(@Request() req: Request, @Param('uuid') uuid: string) {
+    const logger = new Logger(AppointmentController.name);
+
+    try {
+      const user = req['patientId'];
+      console.log("Valor do patientId patchLinkAppointment: ", user);
+      logger.log('patchLinkAppointment()');
+      return await this.appointmentService.patchLinkAppointment(user, uuid);
+    } catch (error) {
+      logger.error(error);
+      throw new HttpException(error.message, error.getStatus());
+    }
+  }
+
+  // @Patch('patch/link-appointment/:uuid')
+  // @HttpCode(200)
+  // @ApiBearerAuth('auth')
+  // @ApiOperation({ summary: 'Patch the appointment data to link a patientId' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Returns a JSON with the appointment status',
+  //   type: GetAppointmentResDto,
+  // })
+  // @ApiResponse({
+  //   status: 500,
+  //   description: 'Internal server error',
+  //   type: ErrorDto,
+  // })
+  // async patchLinkAppointment(@Request() req: Request, @Param('uuid') uuid: string) {
+  //   const logger = new Logger(AppointmentController.name);
+
+  //   try {
+  //     const user = req['patientId'];
+  //     console.log("Valor do patientId: ", user);
+  //     logger.log('patchLinkAppointment()');
+  //     return await this.appointmentService.patchLinkAppointment(uuid, user);
+  //   } catch (error) {
+  //     logger.error(error);
+  //     throw new HttpException(error.message, error.getStatus());
+  //   }
+  // }
+
+  @Patch('patch/cancel-appointment/:uuid')
+  @HttpCode(200)
+  @ApiBearerAuth('auth')
+  @ApiOperation({ summary: 'Patch the appointment data to cancel a patientId' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns a JSON with the appointment status',
+    type: GetAppointmentResDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: ErrorDto,
+  })
+  async patchCancelAppointment(@Request() req: Request, @Param('uuid') uuid: string) {
+    const logger = new Logger(AppointmentController.name);
+
+    try {
+      const user = req['patientId'];      
+      logger.log('patchCancelAppointment()');
+      return await this.appointmentService.patchCancelAppointment(uuid, user);
     } catch (error) {
       logger.error(error);
       throw new HttpException(error.message, error.getStatus());
