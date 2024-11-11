@@ -174,34 +174,6 @@ export class AppointmentController implements AppointmentControllerInterface {
     }
   }
 
-  // @Patch('patch/link-appointment/:uuid')
-  // @HttpCode(200)
-  // @ApiBearerAuth('auth')
-  // @ApiOperation({ summary: 'Patch the appointment data to link a patientId' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Returns a JSON with the appointment status',
-  //   type: GetAppointmentResDto,
-  // })
-  // @ApiResponse({
-  //   status: 500,
-  //   description: 'Internal server error',
-  //   type: ErrorDto,
-  // })
-  // async patchLinkAppointment(@Request() req: Request, @Param('uuid') uuid: string) {
-  //   const logger = new Logger(AppointmentController.name);
-
-  //   try {
-  //     const user = req['patientId'];
-  //     console.log("Valor do patientId: ", user);
-  //     logger.log('patchLinkAppointment()');
-  //     return await this.appointmentService.patchLinkAppointment(uuid, user);
-  //   } catch (error) {
-  //     logger.error(error);
-  //     throw new HttpException(error.message, error.getStatus());
-  //   }
-  // }
-
   @Patch('patch/cancel-appointment/:uuid')
   @HttpCode(200)
   @ApiBearerAuth('auth')
